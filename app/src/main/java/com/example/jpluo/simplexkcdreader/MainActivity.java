@@ -5,10 +5,15 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.support.annotation.IntegerRes;
+import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -35,15 +40,27 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private int imageCounter = 0;
     private Boolean changeSuccess;
+    private GestureDetectorCompat gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         imageView = (ImageView) findViewById(R.id.imageView);
         editText = (EditText) findViewById(R.id.editText);
+
         updateImage();
         Picasso.with(getBaseContext()).load(imageURL).into(imageView);
+
+        final GestureDetector gdt = new GestureDetector(new GestureListener());
+        imageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gdt.onTouchEvent(event);
+                return true;
+            }
+        });
     }
 
     public void updateImage(){
@@ -65,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     public void on_prevButton_click(View view) {
         xkcd_Url = XKCD_FRONTPAGE + Integer.toString(--imageCounter);
         updateImage();
-
+        Log.d("View: ", view.toString());
         if (!changeSuccess) imageCounter++;
     }
 
@@ -94,6 +111,22 @@ public class MainActivity extends AppCompatActivity {
                 changeSuccess = false;
             }
             return null;
+        }
+    }
+
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+            float x1 = e1.getX();
+            float x2 = e2.getX();
+            if (x1 < x2){
+                on_prevButton_click(findViewById(R.id.prevButton));
+            } else{
+                on_nextButton_click(findViewById(R.id.nextButton));
+            }
+            return false;
         }
     }
 }
